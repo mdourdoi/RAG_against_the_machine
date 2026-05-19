@@ -1,6 +1,5 @@
 import os
 import zipfile
-import tarfile
 from pathlib import Path
 
 
@@ -23,9 +22,12 @@ class FilesGetter:
                     continue
                 for file in files:
                     full_path = os.path.join(root, file)
+                    if not (full_path.endswith(('.py', '.md'))):
+                        continue
                     try:
-                        with open(full_path, 'r', encoding='utf-8') as f:
-                            files_data.append((full_path, f.read()))
+                        with open(full_path, 'r', encoding='utf-8', newline='') as f:
+                            files_data.append(
+                                (full_path, f.read().replace('\r\n', '\n')))
                     except UnicodeDecodeError:
                         pass
                     except Exception as err:
@@ -36,29 +38,18 @@ class FilesGetter:
                 for file_info in z.infolist():
                     if (not file_info.is_dir()
                             and self.is_valid_path(file_info.name)):
+                        if not file_info.name.endswith(('.py', '.md', '.txt', '.yaml', '.sh')):
+                            continue
                         try:
                             content = z.read(
                                 file_info.filename).decode('utf-8')
+                            content = content.replace('\r\n', '\n')
                             files_data.append((file_info.filename, content))
                         except UnicodeDecodeError:
                             pass
                         except Exception as err:
                             print(
                                 f"Error on {file_info.filename}: {err}")
-
-        elif source_path.endswith(('.tar', '.tar.gz', '.tgz', '.tar.bz2')):
-            with tarfile.open(source_path, 'r:*') as t:
-                for member in t.getmembers():
-                    if member.isfile() and self.is_valid_path(member.name):
-                        try:
-                            f = t.extractfile(member)
-                            if f is not None:
-                                content = f.read().decode('utf-8')
-                                files_data.append((member.name, content))
-                        except UnicodeDecodeError:
-                            pass  # Fichier binaire, on ignore
-                        except Exception as e:
-                            print(f"Error on {member.name} : {e}")
 
         else:
             print(f"Format not supported for {source_path}.")

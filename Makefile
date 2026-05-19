@@ -13,10 +13,10 @@ $(INSTALL_STAMP): $(PYPROJECT_TOML)
 install: $(INSTALL_STAMP)
 
 run: $(INSTALL_STAMP)
-	@$(RUN) -m rag_against_the_machine
+	@$(RUN) -m src
 
 debug: $(INSTALL_STAMP)
-	@$(RUN) -m pdb -m rag_against_the_machine
+	@$(RUN) -m pdb -m src
 
 lint: $(INSTALL_STAMP)
 	$(FLAKE8) . --exclude .venv
