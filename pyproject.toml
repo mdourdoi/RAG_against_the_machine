@@ -15,6 +15,7 @@ dependencies = [
     "pathlib>=1.0.1",
     "pydantic>=2.13.4",
     "pystemmer",
+    "torch>=2.12.0",
     "tqdm>=4.67.3",
     "transformers>=5.8.1",
 ]

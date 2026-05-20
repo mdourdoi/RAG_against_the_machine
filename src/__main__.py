@@ -1,6 +1,7 @@
 import json
 from .data_ingestion import ChunksCreator, FilesGetter, KnowledgeBaseBuilder
 from .search import SearchEngine, Searcher
+import fire
 
 
 def check_5_percent_overlap(
@@ -54,7 +55,6 @@ def calculate_recall_at_k(predictions, ground_truth_path: str) -> float:
 
         # Pour chaque source que l'algorithme était censé trouver...
         for expected in expected_sources:
-            # ... on regarde si au moins UNE de nos sources prédites la chevauche à 5%
             is_found = any(check_5_percent_overlap(ret_source, expected)
                            for ret_source in result.retrieved_sources)
             if is_found:
@@ -68,16 +68,19 @@ def calculate_recall_at_k(predictions, ground_truth_path: str) -> float:
     return (total_score / num_questions) if num_questions > 0 else 0.0
 
 
-def main():
+def main(
+        source: str = "vllm-0.10.1",
+        dataset_path: str = "private/AnsweredQuestions/dataset_code_private.json",
+        max_chunk_size: int = 1400,
+        k: int = 5):
     # --- 1. INGESTION ---
-    source = "vllm-0.10.1"
     file_getter = FilesGetter()
     extracted_data = file_getter.extract_files_data(source)
     if not extracted_data:
         print("Erreur d'extraction.")
         return
 
-    chunker = ChunksCreator(max_chunk_size=1500)
+    chunker = ChunksCreator(max_chunk_size)
     builder = KnowledgeBaseBuilder(chunker=chunker)
     builder.build_from_files(extracted_data)
 
@@ -88,13 +91,12 @@ def main():
 
     # PLACEHOLDER : Le chemin vers le fichier de test du professeur contenant
     # les "sources"
-    ground_truth_path = 'private/AnsweredQuestions/dataset_docs_private.json'
-    k_value = 5
+    ground_truth_path = dataset_path
 
-    print(f"Exécution de la recherche sur le dataset (k={k_value})...")
+    print(f"Exécution de la recherche sur le dataset (k={k})...")
     # Note : On peut très bien lancer la recherche sur le fichier 'Answered',
     # car ton Searcher ne lira que la clé 'question' de toute façon.
-    results = searcher.process_dataset(ground_truth_path, k_value)
+    results = searcher.process_dataset(ground_truth_path, k)
 
     with open('test.json', 'w') as f:
         f.write(results.model_dump_json(indent=4))
@@ -104,9 +106,9 @@ def main():
     recall_score = calculate_recall_at_k(results, ground_truth_path)
 
     print("=" * 40)
-    print(f"RÉSULTAT FINAL RECALL@{k_value} : {recall_score * 100:.2f}%")
+    print(f"RÉSULTAT FINAL RECALL@{k} : {recall_score * 100:.2f}%")
     print("=" * 40)
 
 
 if __name__ == "__main__":
-    main()
+    fire.Fire(main)

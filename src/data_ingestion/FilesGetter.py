@@ -22,7 +22,9 @@ class FilesGetter:
                     continue
                 for file in files:
                     full_path = os.path.join(root, file)
-                    if not (full_path.endswith(('.py', '.md'))):
+                    if not (
+                        full_path.endswith(
+                            ('.py', '.md', '.txt', '.yaml', '.sh'))):
                         continue
                     try:
                         with open(full_path, 'r', encoding='utf-8', newline='') as f:
@@ -38,7 +40,8 @@ class FilesGetter:
                 for file_info in z.infolist():
                     if (not file_info.is_dir()
                             and self.is_valid_path(file_info.name)):
-                        if not file_info.name.endswith(('.py', '.md', '.txt', '.yaml', '.sh')):
+                        if not file_info.name.endswith(
+                                ('.py', '.md', '.txt', '.yaml', '.sh')):
                             continue
                         try:
                             content = z.read(
