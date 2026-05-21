@@ -69,7 +69,7 @@ def calculate_recall_at_k(predictions, ground_truth_path: str) -> float:
 
 
 def main(
-        source: str = "vllm-0.10.1",
+        source: str = "data/raw/vllm-0.10.1",
         dataset_path: str = "private/AnsweredQuestions/dataset_code_private.json",
         max_chunk_size: int = 1400,
         k: int = 5):
@@ -77,7 +77,7 @@ def main(
     file_getter = FilesGetter()
     extracted_data = file_getter.extract_files_data(source)
     if not extracted_data:
-        print("Erreur d'extraction.")
+        print("Extract error.")
         return
 
     chunker = ChunksCreator(max_chunk_size)

@@ -27,7 +27,8 @@ class FilesGetter:
                             ('.py', '.md', '.txt', '.yaml', '.sh'))):
                         continue
                     try:
-                        with open(full_path, 'r', encoding='utf-8', newline='') as f:
+                        with open(full_path, 'r', encoding='utf-8',
+                                  newline='') as f:
                             files_data.append(
                                 (full_path, f.read().replace('\r\n', '\n')))
                     except UnicodeDecodeError:
