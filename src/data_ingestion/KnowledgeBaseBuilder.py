@@ -35,8 +35,7 @@ class KnowledgeBaseBuilder:
 
         text_content = []
         for chunk in chunks:
-            clean_path = chunk['file_path'].replace('_', ' ').replace('/', ' ')
-            clean_path = clean_path.replace('.', ' ')
+            clean_path = re.sub(r'[_./-]', ' ', chunk['file_path'])
             clean_path = clean_path * 10
 
             clean_content = chunk['content'].replace('_', ' ')

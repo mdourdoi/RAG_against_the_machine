@@ -1,6 +1,7 @@
 import json
 from .data_ingestion import ChunksCreator, FilesGetter, KnowledgeBaseBuilder
 from .search import SearchEngine, Searcher
+from .llm import Generator
 import fire
 
 
@@ -53,7 +54,7 @@ def calculate_recall_at_k(predictions, ground_truth_path: str) -> float:
 
         found_count = 0
 
-        # Pour chaque source que l'algorithme était censé trouver...
+        # Pour chaque source que l'algorithme était censé trouver
         for expected in expected_sources:
             is_found = any(check_5_percent_overlap(ret_source, expected)
                            for ret_source in result.retrieved_sources)
@@ -89,25 +90,26 @@ def main(
     engine = SearchEngine(save_dir="data/processed/")
     searcher = Searcher(engine)
 
-    # PLACEHOLDER : Le chemin vers le fichier de test du professeur contenant
-    # les "sources"
+    # chemin vers le fichier de test
     ground_truth_path = dataset_path
 
     print(f"Exécution de la recherche sur le dataset (k={k})...")
-    # Note : On peut très bien lancer la recherche sur le fichier 'Answered',
-    # car ton Searcher ne lira que la clé 'question' de toute façon.
+    # Note : On peut très bien lancer la recherche sur le fichier 'Answered'
     results = searcher.process_dataset(ground_truth_path, k)
 
     with open('test.json', 'w') as f:
         f.write(results.model_dump_json(indent=4))
 
-    # # --- 3. ÉVALUATION ---
-    print("\nCalcul du Recall@k en cours...")
-    recall_score = calculate_recall_at_k(results, ground_truth_path)
+    # --- 3. GÉNÉRATION ---
+    print("\nLauching answering phase LLM...")
+    generator = Generator()
+    
+    # LA ligne magique
+    final_results = generator.process_dataset(results)
 
-    print("=" * 40)
-    print(f"RÉSULTAT FINAL RECALL@{k} : {recall_score * 100:.2f}%")
-    print("=" * 40)
+    # --- 4. SAUVEGARDE ---
+    with open('output_final.json', 'w', encoding='utf-8') as f:
+        f.write(final_results.model_dump_json(indent=4))
 
 
 if __name__ == "__main__":
