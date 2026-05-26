@@ -7,13 +7,7 @@ class ChunksCreator:
         Initialization for the data retriever. Set the max chunk size to
         2000 if the input is higher or 800 if it is lower.
         """
-        if max_chunk_size > 2000:
-            print()
-            print('/!\\ WARNING /!\\')
-            print('The maximum chunk size is 2000, continuing with this value')
-            print()
-            self.max_chunk_size = 2000
-        elif max_chunk_size < 800:
+        if max_chunk_size < 800:
             print()
             print('/!\\ WARNING /!\\')
             print('The min chunk size is 800, continuing with this value')

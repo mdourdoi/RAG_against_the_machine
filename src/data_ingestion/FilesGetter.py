@@ -8,7 +8,7 @@ class FilesGetter:
     @staticmethod
     def is_valid_path(path: str) -> bool:
         for value in path.split(sep='/'):
-            if value.startswith(('.', '__')):
+            if value.startswith(('.')):
                 return False
         return True
 
@@ -57,6 +57,6 @@ class FilesGetter:
 
         else:
             print(f"Format not supported for {source_path}.")
-            print("Please input a file, a .zip or a .tar.")
+            print("Please input a file or a .zip")
 
         return files_data

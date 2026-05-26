@@ -23,7 +23,7 @@ class SearchEngine:
         with open(self.chunks_file, 'r', encoding='utf-8') as f:
             self.chunks_metadata = json.load(f)
 
-    def ask_question(self, user_input: str | list[str], k: int = 5):
+    def search_question(self, user_input: str | list[str], k: int = 5):
         if isinstance(user_input, str):
             input = [user_input]
         else:

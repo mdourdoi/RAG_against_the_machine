@@ -12,15 +12,23 @@ class Searcher:
             self,
             dataset_path: str,
             k: int) -> StudentSearchResults:
-        with open(dataset_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-        inputs_dataset = RagDataset.model_validate_json(content)
+        try:
+            with open(dataset_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+        except Exception:
+            err = f"Impossible to open {dataset_path}, "
+            err += "file may not exit or not enough privilege."
+            raise Exception(err)
+        try:
+            inputs_dataset = RagDataset.model_validate_json(content)
+        except Exception:
+            raise Exception('Invalid dataset (invalid pydantic validation)')
         list_questions = []
         for q in inputs_dataset.rag_questions:
             q_spaced = re.sub(r'([a-z])([A-Z])', r'\1 \2', q.question)
             q_clean = re.sub(r'[_./-]', ' ', q_spaced)
             list_questions.append(f"{q.question} {q_clean}")
-        answers = self.engine.ask_question(list_questions, k=k)
+        answers = self.engine.search_question(list_questions, k=k)
         results = []
         for i, question_obj in enumerate(inputs_dataset.rag_questions):
             sources_pydantic = [
