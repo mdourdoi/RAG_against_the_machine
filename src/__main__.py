@@ -100,17 +100,21 @@ class RAG:
 
         return (total_score / num_questions) if num_questions > 0 else 0.0
 
-    def index(self, max_chunk_size: int = 2000) -> None:
-        """Build the BM25 index from the raw source repository.
+    def index(self, max_chunk_size: int = 2000,
+              source: str = "data/raw/vllm-0.10.1.zip") -> None:
+        """Build the BM25 index from the source.
 
         Args:
             max_chunk_size: Maximum chunk size used during ingestion.
         """
+        
         if not isinstance(max_chunk_size, int):
             raise ValueError(
                 'Invalid max_chunk_size_value: must be an integer')
+        if not isinstance(source, str):
+            raise ValueError('Invalid source: must be a string')
+        
         print(f"Starting indexation with max chunk size {max_chunk_size}...")
-        source = "data/raw/vllm-0.10.1"
         file_getter = FilesGetter()
         extracted_data = file_getter.extract_files_data(source)
 

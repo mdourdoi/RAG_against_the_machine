@@ -54,26 +54,30 @@ class FilesGetter:
                         print(f"Can't open {full_path}: {err}")
 
         elif source_path.endswith('.zip'):
-            with zipfile.ZipFile(source_path, 'r') as z:
-                for file_info in z.infolist():
-                    if (not file_info.is_dir()
-                            and self.is_valid_path(file_info.filename)):
-                        if not file_info.filename.endswith(
-                                ('.py', '.md', '.txt', '.yaml', '.sh')):
-                            continue
-                        try:
-                            content = z.read(
-                                file_info.filename).decode('utf-8')
-                            content = content.replace('\r\n', '\n')
-                            files_data.append((file_info.filename, content))
-                        except UnicodeDecodeError:
-                            pass
-                        except Exception as err:
-                            print(
-                                f"Error on {file_info.filename}: {err}")
+            try:
+                with zipfile.ZipFile(source_path, 'r') as z:
+                    for file_info in z.infolist():
+                        if (not file_info.is_dir()
+                                and self.is_valid_path(file_info.filename)):
+                            if not file_info.filename.endswith(
+                                    ('.py', '.md', '.txt', '.yaml', '.sh')):
+                                continue
+                            try:
+                                content = z.read(
+                                    file_info.filename).decode('utf-8')
+                                content = content.replace('\r\n', '\n')
+                                files_data.append(
+                                    (file_info.filename, content))
+                            except UnicodeDecodeError:
+                                pass
+                            except Exception as err:
+                                print(
+                                    f"Error on {file_info.filename}: {err}")
+            except Exception:
+                raise Exception(f"Can't open {source_path}")
 
         else:
             print(f"Format not supported for {source_path}.")
-            print("Please input a file or a .zip")
+            print("Please input a file or a .zip, or ensure the file exists.")
 
         return files_data
