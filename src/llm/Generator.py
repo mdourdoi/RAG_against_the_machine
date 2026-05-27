@@ -7,14 +7,29 @@ from typing import Protocol, Any, cast
 
 
 class _CausalLM(Protocol):
+    """Protocol for causal language models that expose ``generate``."""
 
     def generate(self, **kwargs: Any) -> torch.Tensor:
+        """Generate tokens from model inputs.
+
+        Args:
+            **kwargs: Keyword arguments forwarded to the underlying model.
+
+        Returns:
+            The generated token tensor.
+        """
         ...
 
 
 class Generator:
     def __init__(self, model_name: str = "Qwen/Qwen3-0.6B",
                  domain: str = "the vLLM codebase"):
+        """Load the tokenizer and causal language model.
+
+        Args:
+            model_name: Hugging Face model identifier.
+            domain: Domain description used in the system prompt.
+        """
         print(f"Loading {model_name}...")
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.domain = domain
@@ -29,6 +44,14 @@ class Generator:
             self,
             search_result: StudentSearchResults
     ) -> StudentSearchResultsAndAnswer:
+        """Generate answers for every retrieval result in a dataset.
+
+        Args:
+            search_result: Retrieved sources for each question.
+
+        Returns:
+            The same dataset enriched with generated answers.
+        """
         final_answers = []
         for result in tqdm(
             search_result.search_results,
@@ -52,6 +75,15 @@ class Generator:
             self,
             question: str,
             retrieved_sources: list[MinimalSource]) -> str:
+        """Generate a short answer from the retrieved sources.
+
+        Args:
+            question: User question to answer.
+            retrieved_sources: Retrieved source chunks used as context.
+
+        Returns:
+            The generated answer text stripped of surrounding whitespace.
+        """
         context_blocks = []
         for i, source in enumerate(retrieved_sources):
             if source.content:

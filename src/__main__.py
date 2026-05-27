@@ -15,12 +15,24 @@ from .models import (
 )
 
 
-class MoulinetteCLI:
+class RAG:
+    """Command-line entry points for indexing, searching, answering
+      and evaluating."""
 
     def _check_5_percent_overlap(
             self,
             retrieved_source: MinimalSource,
             expected_source: dict) -> bool:
+        """Return whether two sources overlap enough to count as a match.
+
+        Args:
+            retrieved_source: Source returned by the retriever.
+            expected_source: Ground-truth source description.
+
+        Returns:
+            True when the source paths match and the character overlap is at
+            least 5 percent of the expected span.
+        """
         found_path = retrieved_source.file_path.replace('\\', '/')
         expected_path = expected_source["file_path"].replace('\\', '/')
 
@@ -49,6 +61,16 @@ class MoulinetteCLI:
             self,
             predictions: StudentSearchResults,
             ground_truth_path: str) -> float:
+        """Compute recall@k for a set of predictions.
+
+        Args:
+            predictions: Predicted search results.
+            ground_truth_path: Path to the JSON file containing expected
+                sources.
+
+        Returns:
+            The average recall score across all questions.
+        """
         with open(ground_truth_path, 'r', encoding='utf-8') as f:
             gt_data = json.load(f)
 
@@ -79,6 +101,11 @@ class MoulinetteCLI:
         return (total_score / num_questions) if num_questions > 0 else 0.0
 
     def index(self, max_chunk_size: int = 2000) -> None:
+        """Build the BM25 index from the raw source repository.
+
+        Args:
+            max_chunk_size: Maximum chunk size used during ingestion.
+        """
         if not isinstance(max_chunk_size, int):
             raise ValueError(
                 'Invalid max_chunk_size_value: must be an integer')
@@ -96,6 +123,12 @@ class MoulinetteCLI:
         print("Ingestion complete! Indices saved under data/processed/")
 
     def search(self, query: str, k: int = 5) -> None:
+        """Search the indexed corpus for a single query and print results.
+
+        Args:
+            query: User query to search.
+            k: Number of sources to retrieve.
+        """
         if not isinstance(query, str):
             raise ValueError("Invalid query, must be a string")
         if not isinstance(k, int):
@@ -125,6 +158,13 @@ class MoulinetteCLI:
             dataset_path: str,
             k: int = 10,
             save_directory: str = "data/output/search_results") -> None:
+        """Run retrieval for every question in a dataset and save the output.
+
+        Args:
+            dataset_path: Path to the dataset file.
+            k: Number of sources to retrieve per question.
+            save_directory: Directory where the JSON output is written.
+        """
 
         if not isinstance(dataset_path, str):
             raise ValueError("Invalid value for dataset_path, must be a str.")
@@ -151,6 +191,12 @@ class MoulinetteCLI:
         print(f"Saved student_search_results to {save_path}")
 
     def answer(self, query: str, k: int = 10) -> None:
+        """Retrieve sources for one question and generate an answer.
+
+        Args:
+            query: User question to answer.
+            k: Number of sources to retrieve before generation.
+        """
         if not isinstance(k, int):
             raise ValueError("Invalid value for k : must be an integer")
         if k <= 0:
@@ -185,6 +231,12 @@ class MoulinetteCLI:
             student_search_results_path: str,
             save_directory: str = "data/output/search_results_and_answer"
     ) -> None:
+        """Generate answers for a saved search-results dataset.
+
+        Args:
+            student_search_results_path: Path to the search-results JSON file.
+            save_directory: Directory where the answered dataset is written.
+        """
 
         if not isinstance(student_search_results_path, str):
             err = "Invalid student_search_results_path, must be a string"
@@ -223,6 +275,13 @@ class MoulinetteCLI:
             student_answer_path: str,
             dataset_path: str,
             k: int = 10) -> None:
+        """Evaluate recall@k for a saved answer file.
+
+        Args:
+            student_answer_path: Path to the predicted answers JSON file.
+            dataset_path: Path to the ground-truth dataset JSON file.
+            k: Retrieval depth used during evaluation.
+        """
         print(f"Evaluating search results for {student_answer_path}...")
 
         with open(student_answer_path, 'r', encoding='utf-8') as f:
@@ -237,6 +296,6 @@ class MoulinetteCLI:
 
 if __name__ == "__main__":
     try:
-        fire.Fire(MoulinetteCLI)
+        fire.Fire(RAG)
     except Exception as err:
         print(f'Error: {err}')

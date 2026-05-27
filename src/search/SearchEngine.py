@@ -4,10 +4,16 @@ import Stemmer
 
 
 class SearchEngine:
+    """Load and query the local BM25 index built from the codebase."""
 
     def __init__(
             self,
             save_dir: str = "data/processed/") -> None:
+        """Initialize the search engine.
+
+        Args:
+            save_dir: Directory containing the serialized index and metadata.
+        """
         self.save_dir = save_dir
         self.index_dir = f"{save_dir}/bm25_index"
         self.chunks_file = f"{save_dir}/chunks_metadata.json"
@@ -15,16 +21,27 @@ class SearchEngine:
         self.stemmer = Stemmer.Stemmer('english')
 
     def load_assets(self) -> None:
+        """Load the BM25 index and chunk metadata from disk."""
         try:
             self.retriever = bm25s.BM25(k1=2.5, b=0.9).load(
                 self.index_dir, load_corpus=False)
         except Exception as e:
-            raise Exception(f'Impossible to open the index: {e}')
+            raise Exception(f'Unable to open the index: {e}')
         with open(self.chunks_file, 'r', encoding='utf-8') as f:
             self.chunks_metadata = json.load(f)
 
     def search_question(self, user_input: str |
                         list[str], k: int = 5) -> list[list[dict]]:
+        """Retrieve the top matching chunks for one or more queries.
+
+        Args:
+            user_input: A single query or a list of queries.
+            k: Number of chunks to retrieve per query.
+
+        Returns:
+            A list of results, one list per query, containing source metadata
+            dictionaries.
+        """
         if isinstance(user_input, str):
             input = [user_input]
         else:

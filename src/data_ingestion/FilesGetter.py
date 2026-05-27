@@ -4,15 +4,32 @@ from pathlib import Path
 
 
 class FilesGetter:
+    """Collect supported source files from a directory or zip archive."""
 
     @staticmethod
     def is_valid_path(path: str) -> bool:
+        """Return whether a path should be ingested.
+
+        Args:
+            path: File or directory path to validate.
+
+        Returns:
+            True when no path component starts with a dot.
+        """
         for value in path.split(sep='/'):
             if value.startswith(('.')):
                 return False
         return True
 
     def extract_files_data(self, source_path: str) -> list[tuple[str, str]]:
+        """Read supported files and return their paths and contents.
+
+        Args:
+            source_path: Directory or zip archive to scan.
+
+        Returns:
+            A list of ``(file_path, content)`` tuples for supported files.
+        """
         files_data = []
         path_obj = Path(source_path)
 

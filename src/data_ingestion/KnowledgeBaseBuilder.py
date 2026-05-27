@@ -7,11 +7,18 @@ import re
 
 
 class KnowledgeBaseBuilder:
+    """Build and persist the search index from extracted source files."""
 
     def __init__(
             self,
             chunker: ChunksCreator,
             save_dir: str = "data/processed/") -> None:
+        """Initialize the builder and output locations.
+
+        Args:
+            chunker: Chunking helper used to split files into documents.
+            save_dir: Directory where the index and metadata are stored.
+        """
         self.chunker = chunker
         self.save_dir = save_dir
         self.index_dir = f"{save_dir}/bm25_index"
@@ -19,10 +26,20 @@ class KnowledgeBaseBuilder:
         self.stemmer = Stemmer.Stemmer('english')
 
     def _save_chunks_metadata(self, chunks: list[dict]) -> None:
+        """Write chunk metadata to disk as JSON.
+
+        Args:
+            chunks: Chunk dictionaries to persist.
+        """
         with open(self.chunks_file, 'w', encoding='utf-8') as f:
             json.dump(chunks, f, indent=4)
 
     def build_from_files(self, files_data: list[tuple[str, str]]) -> None:
+        """Chunk files, build the BM25 index, and save metadata.
+
+        Args:
+            files_data: Iterable of ``(file_path, content)`` tuples.
+        """
         chunks = []
         for file_path, content in tqdm(
                 files_data, 'Chunking files', unit='files', leave=True):

@@ -25,6 +25,6 @@ lint: $(INSTALL_STAMP)
 
 clean:
 	@rm -rf $(INSTALL_STAMP)
-	@rm -rf .mypy_cache .venv data/processed data/output
+	@rm -rf .mypy_cache .venv data/processed data/output */__pycache__/*
 
 .PHONY: install run debug clean lint lint-strict

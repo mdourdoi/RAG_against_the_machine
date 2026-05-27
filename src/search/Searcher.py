@@ -5,19 +5,35 @@ import re
 
 
 class Searcher:
+    """Transform a dataset of questions into retrieval results."""
+
     def __init__(self, engine: SearchEngine):
+        """Store the search engine used for dataset retrieval.
+
+        Args:
+            engine: Search engine used to query the indexed corpus.
+        """
         self.engine = engine
 
     def process_dataset(
             self,
             dataset_path: str,
             k: int) -> StudentSearchResults:
+        """Load a dataset and retrieve sources for each question.
+
+        Args:
+            dataset_path: Path to the dataset JSON file.
+            k: Number of sources to retrieve per question.
+
+        Returns:
+            A Pydantic model containing the retrieval results.
+        """
         try:
             with open(dataset_path, 'r', encoding='utf-8') as f:
                 content = f.read()
         except Exception:
-            err = f"Impossible to open {dataset_path}, "
-            err += "file may not exit or not enough privilege."
+            err = f"Unable to open {dataset_path}, "
+            err += "the file may not exist or permissions may be missing."
             raise Exception(err)
         try:
             inputs_dataset = RagDataset.model_validate_json(content)

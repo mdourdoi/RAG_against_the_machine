@@ -3,9 +3,10 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter, Language
 
 class ChunksCreator:
     def __init__(self, max_chunk_size: int):
-        """
-        Initialization for the data retriever. Set the max chunk size to
-        2000 if the input is higher or 800 if it is lower.
+        """Initialize the chunk splitter configuration.
+
+        Args:
+            max_chunk_size: Target maximum chunk size for splitting.
         """
         if max_chunk_size < 800:
             print()
@@ -18,13 +19,13 @@ class ChunksCreator:
         self.chunk_overlap = (self.max_chunk_size * 2) // 10
 
     def _get_splitter(self, file_path: str) -> RecursiveCharacterTextSplitter:
-        """
-        Creates the correct splitter for the instance.
+        """Return a splitter configured for the file type.
 
         Args:
-            - file_path => the path to the file which will be ingested
+            file_path: Path to the file being chunked.
+
         Returns:
-            - a splitter from the langchain library adapted to the type of file
+            A LangChain splitter adapted to the file extension.
         """
         if file_path.endswith('.py'):
             return RecursiveCharacterTextSplitter.from_language(
@@ -48,6 +49,15 @@ class ChunksCreator:
                 strip_whitespace=False)
 
     def process_file(self, file_path: str, content: str) -> list[dict]:
+        """Split a file into chunks with positional metadata.
+
+        Args:
+            file_path: Path to the file being chunked.
+            content: File content to split.
+
+        Returns:
+            A list of chunk dictionaries containing path, offsets and text.
+        """
         splitter = self._get_splitter(file_path)
         documents = splitter.create_documents([content])
         res = []
