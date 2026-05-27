@@ -1,8 +1,8 @@
 from pydantic import BaseModel
-from typing import List
+from typing import Sequence
 from .MinimalSearchResults import MinimalSearchResults
 
 
 class StudentSearchResults(BaseModel):
-    search_results: List[MinimalSearchResults]
+    search_results: Sequence[MinimalSearchResults]
     k: int

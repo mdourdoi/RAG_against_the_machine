@@ -21,7 +21,7 @@ class FilesGetter:
                 if not self.is_valid_path(root):
                     continue
                 for file in files:
-                    full_path = os.path.join(root, file)
+                    full_path = os.path.join(root, file).replace('\\', '/')
                     if not (
                         full_path.endswith(
                             ('.py', '.md', '.txt', '.yaml', '.sh'))):
@@ -40,8 +40,8 @@ class FilesGetter:
             with zipfile.ZipFile(source_path, 'r') as z:
                 for file_info in z.infolist():
                     if (not file_info.is_dir()
-                            and self.is_valid_path(file_info.name)):
-                        if not file_info.name.endswith(
+                            and self.is_valid_path(file_info.filename)):
+                        if not file_info.filename.endswith(
                                 ('.py', '.md', '.txt', '.yaml', '.sh')):
                             continue
                         try:

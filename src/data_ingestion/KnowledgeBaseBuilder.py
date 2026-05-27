@@ -11,14 +11,14 @@ class KnowledgeBaseBuilder:
     def __init__(
             self,
             chunker: ChunksCreator,
-            save_dir="data/processed/") -> None:
+            save_dir: str = "data/processed/") -> None:
         self.chunker = chunker
         self.save_dir = save_dir
         self.index_dir = f"{save_dir}/bm25_index"
         self.chunks_file = f"{save_dir}/chunks_metadata.json"
         self.stemmer = Stemmer.Stemmer('english')
 
-    def _save_chunks_metadata(self, chunks: list[dict]) -> bool:
+    def _save_chunks_metadata(self, chunks: list[dict]) -> None:
         with open(self.chunks_file, 'w', encoding='utf-8') as f:
             json.dump(chunks, f, indent=4)
 

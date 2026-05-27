@@ -19,7 +19,7 @@ class MoulinetteCLI:
 
     def _check_5_percent_overlap(
             self,
-            retrieved_source,
+            retrieved_source: MinimalSource,
             expected_source: dict) -> bool:
         found_path = retrieved_source.file_path.replace('\\', '/')
         expected_path = expected_source["file_path"].replace('\\', '/')
@@ -43,7 +43,7 @@ class MoulinetteCLI:
             return False
 
         overlap_ratio = overlap_len / expected_len
-        return overlap_ratio >= 0.05
+        return bool(overlap_ratio >= 0.05)
 
     def _calculate_recall_at_k(
             self,
@@ -55,7 +55,7 @@ class MoulinetteCLI:
         gt_dict = {q["question_id"]: q.get("sources", [])
                    for q in gt_data["rag_questions"]}
 
-        total_score = 0
+        total_score: float = 0
         num_questions = len(predictions.search_results)
 
         for result in predictions.search_results:
@@ -125,6 +125,7 @@ class MoulinetteCLI:
             dataset_path: str,
             k: int = 10,
             save_directory: str = "data/output/search_results") -> None:
+
         if not isinstance(dataset_path, str):
             raise ValueError("Invalid value for dataset_path, must be a str.")
         if not isinstance(k, int):
@@ -133,6 +134,7 @@ class MoulinetteCLI:
             raise ValueError("Invalid value for k : must be > 0")
         if not isinstance(save_directory, str):
             raise ValueError("Invalid save_directory, must be a str.")
+
         print(f"Searching dataset {dataset_path}...")
         engine = SearchEngine(save_dir="data/processed/")
         searcher = Searcher(engine)
@@ -141,7 +143,7 @@ class MoulinetteCLI:
 
         os.makedirs(save_directory, exist_ok=True)
         filename = os.path.basename(dataset_path)
-        save_path = os.path.join(save_directory, filename)
+        save_path = os.path.join(save_directory, filename).replace('\\', '/')
 
         with open(save_path, 'w', encoding='utf-8') as f:
             f.write(results.model_dump_json(indent=4))
@@ -183,6 +185,7 @@ class MoulinetteCLI:
             student_search_results_path: str,
             save_directory: str = "data/output/search_results_and_answer"
     ) -> None:
+
         if not isinstance(student_search_results_path, str):
             err = "Invalid student_search_results_path, must be a string"
             raise ValueError(err)
@@ -208,7 +211,7 @@ class MoulinetteCLI:
 
         os.makedirs(save_directory, exist_ok=True)
         filename = os.path.basename(student_search_results_path)
-        save_path = os.path.join(save_directory, filename)
+        save_path = os.path.join(save_directory, filename).replace('\\', '/')
 
         with open(save_path, 'w', encoding='utf-8') as f:
             f.write(final_results.model_dump_json(indent=4))

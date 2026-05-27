@@ -7,7 +7,7 @@ class SearchEngine:
 
     def __init__(
             self,
-            save_dir="data/processed/") -> None:
+            save_dir: str = "data/processed/") -> None:
         self.save_dir = save_dir
         self.index_dir = f"{save_dir}/bm25_index"
         self.chunks_file = f"{save_dir}/chunks_metadata.json"
@@ -23,7 +23,8 @@ class SearchEngine:
         with open(self.chunks_file, 'r', encoding='utf-8') as f:
             self.chunks_metadata = json.load(f)
 
-    def search_question(self, user_input: str | list[str], k: int = 5):
+    def search_question(self, user_input: str |
+                        list[str], k: int = 5) -> list[list[dict]]:
         if isinstance(user_input, str):
             input = [user_input]
         else:

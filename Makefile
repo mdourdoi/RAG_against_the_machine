@@ -1,4 +1,4 @@
-RUN := uv run python3 -B
+RUN := uv run python -B
 PYPROJECT_TOML := pyproject.toml
 
 ARGS ?= index
@@ -23,13 +23,8 @@ lint: $(INSTALL_STAMP)
 	$(FLAKE8) src
 	$(MYPY) src --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
-lint-strict: $(INSTALL_STAMP)
-	$(FLAKE8) src
-	$(MYPY) src --strict
-
 clean:
 	@rm -rf $(INSTALL_STAMP)
-	@find .  -type d -name __pycache__ -delete
-	@rm -rf .mypy_cache .venv data/processed
+	@rm -rf .mypy_cache .venv data/processed data/output
 
 .PHONY: install run debug clean lint lint-strict
