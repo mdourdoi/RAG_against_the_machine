@@ -47,9 +47,8 @@ class Searcher:
         answers = self.engine.search_question(list_questions, k=k)
         results = []
         for i, question_obj in enumerate(inputs_dataset.rag_questions):
-            sources_pydantic = [
-                MinimalSource(
-                    **source) for source in answers[i]]
+            sources_pydantic = [MinimalSource.model_validate(
+                source) for source in answers[i]]
             minimal_result = MinimalSearchResults(
                 question_id=question_obj.question_id,
                 question=question_obj.question,

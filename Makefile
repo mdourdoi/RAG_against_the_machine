@@ -26,6 +26,6 @@ lint: $(INSTALL_STAMP)
 clean:
 	@rm -rf $(INSTALL_STAMP)
 	@rm -rf .mypy_cache .venv data/processed data/output
-	@find . -type d -name __pycache__ -delete
+	@find . -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete
 
-.PHONY: install run debug clean lint lint-strict
+.PHONY: install run debug clean lint

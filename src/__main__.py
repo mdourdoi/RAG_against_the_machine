@@ -4,7 +4,6 @@ import fire
 
 from .data_ingestion import ChunksCreator, FilesGetter, KnowledgeBaseBuilder
 from .search import SearchEngine, Searcher
-from .llm import Generator
 import uuid
 from .models import (
     StudentSearchResults,
@@ -71,11 +70,14 @@ class RAG:
         Returns:
             The average recall score across all questions.
         """
-        with open(ground_truth_path, 'r', encoding='utf-8') as f:
-            gt_data = json.load(f)
+        try:
+            with open(ground_truth_path, 'r', encoding='utf-8') as f:
+                gt_data = json.load(f)
 
-        gt_dict = {q["question_id"]: q.get("sources", [])
-                   for q in gt_data["rag_questions"]}
+            gt_dict = {q["question_id"]: q.get("sources", [])
+                       for q in gt_data["rag_questions"]}
+        except Exception:
+            raise Exception("Invalid verification file.")
 
         total_score: float = 0
         num_questions = len(predictions.search_results)
@@ -107,16 +109,14 @@ class RAG:
         Args:
             max_chunk_size: Maximum chunk size used during ingestion.
         """
-        
+
         if not isinstance(max_chunk_size, int):
             raise ValueError(
                 'Invalid max_chunk_size_value: must be an integer')
-        if not isinstance(source, str):
-            raise ValueError('Invalid source: must be a string')
-        
+
         print(f"Starting indexation with max chunk size {max_chunk_size}...")
         file_getter = FilesGetter()
-        extracted_data = file_getter.extract_files_data(source)
+        extracted_data = file_getter.extract_files_data(str(source))
 
         if not extracted_data:
             raise Exception("Extraction error: nothing could be extracted")
@@ -133,16 +133,15 @@ class RAG:
             query: User query to search.
             k: Number of sources to retrieve.
         """
-        if not isinstance(query, str):
-            raise ValueError("Invalid query, must be a string")
+
         if not isinstance(k, int):
             raise ValueError("Invalid value for k : must be an integer")
         if k <= 0:
             raise ValueError("Invalid value for k : must be > 0")
+
         engine = SearchEngine(save_dir="data/processed/")
-        raw_sources = engine.search_question([query], k=k)[0]
-        sources = [MinimalSource(**src) if isinstance(src, dict)
-                   else src for src in raw_sources]
+        raw_sources = engine.search_question([str(query)], k=k)[0]
+        sources = [MinimalSource.model_validate(src) for src in raw_sources]
 
         result = StudentSearchResults(
             search_results=[
@@ -160,7 +159,7 @@ class RAG:
     def search_dataset(
             self,
             dataset_path: str,
-            k: int = 10,
+            k: int = 5,
             save_directory: str = "data/output/search_results") -> None:
         """Run retrieval for every question in a dataset and save the output.
 
@@ -170,31 +169,28 @@ class RAG:
             save_directory: Directory where the JSON output is written.
         """
 
-        if not isinstance(dataset_path, str):
-            raise ValueError("Invalid value for dataset_path, must be a str.")
         if not isinstance(k, int):
             raise ValueError("Invalid value for k : must be an integer")
         if k <= 0:
             raise ValueError("Invalid value for k : must be > 0")
-        if not isinstance(save_directory, str):
-            raise ValueError("Invalid save_directory, must be a str.")
 
         print(f"Searching dataset {dataset_path}...")
         engine = SearchEngine(save_dir="data/processed/")
         searcher = Searcher(engine)
 
-        results = searcher.process_dataset(dataset_path, k)
+        results = searcher.process_dataset(str(dataset_path), k)
 
-        os.makedirs(save_directory, exist_ok=True)
-        filename = os.path.basename(dataset_path)
-        save_path = os.path.join(save_directory, filename).replace('\\', '/')
+        os.makedirs(str(save_directory), exist_ok=True)
+        filename = os.path.basename(str(dataset_path))
+        save_path = os.path.join(str(save_directory),
+                                 filename).replace('\\', '/')
 
         with open(save_path, 'w', encoding='utf-8') as f:
             f.write(results.model_dump_json(indent=4))
 
         print(f"Saved student_search_results to {save_path}")
 
-    def answer(self, query: str, k: int = 10) -> None:
+    def answer(self, query: str, k: int = 5) -> None:
         """Retrieve sources for one question and generate an answer.
 
         Args:
@@ -205,22 +201,22 @@ class RAG:
             raise ValueError("Invalid value for k : must be an integer")
         if k <= 0:
             raise ValueError("Invalid value for k : must be > 0")
-        if not isinstance(query, str):
-            raise ValueError("Invalid query, must be a string")
-        engine = SearchEngine(save_dir="data/processed/")
-        raw_sources = engine.search_question([query], k=k)[0]
 
-        sources = [MinimalSource(**src) if isinstance(src, dict)
-                   else src for src in raw_sources]
+        engine = SearchEngine(save_dir="data/processed/")
+        raw_sources = engine.search_question([str(query)], k=k)[0]
+
+        sources = [MinimalSource.model_validate(src) for src in raw_sources]
+
+        from .llm import Generator
 
         generator = Generator()
-        response_text = generator.generate_single_answer(query, sources)
+        response_text = generator.generate_single_answer(str(query), sources)
 
         result = StudentSearchResultsAndAnswer(
             search_results=[
                 MinimalAnswer(
                     question_id=str(uuid.uuid4()),
-                    question=query,
+                    question=str(query),
                     retrieved_sources=sources,
                     answer=response_text
                 )
@@ -242,32 +238,34 @@ class RAG:
             save_directory: Directory where the answered dataset is written.
         """
 
-        if not isinstance(student_search_results_path, str):
-            err = "Invalid student_search_results_path, must be a string"
-            raise ValueError(err)
-        if not isinstance(save_directory, str):
-            err = "Invalid save_directory, must be a string"
-            raise ValueError(err)
-
         print(f"Generating answers for {student_search_results_path}...")
 
         try:
-            with open(student_search_results_path, 'r', encoding='utf-8') as f:
+            with open(
+                str(student_search_results_path),
+                    'r', encoding='utf-8') as f:
                 search_data = StudentSearchResults.model_validate_json(
                     f.read())
         except FileNotFoundError:
-            err = f"Can't open {student_search_results_path}."
+            err = f"Can't open {str(student_search_results_path)}."
             raise FileNotFoundError(err)
         except Exception:
             err = "'Invalid student_search_results_path "
             err += "(invalid pydantic validation)'"
             raise Exception(err)
+
+        from .llm import Generator
+
         generator = Generator()
         final_results = generator.process_dataset(search_data)
 
-        os.makedirs(save_directory, exist_ok=True)
-        filename = os.path.basename(student_search_results_path)
-        save_path = os.path.join(save_directory, filename).replace('\\', '/')
+        os.makedirs(str(save_directory), exist_ok=True)
+        filename = os.path.basename(str(student_search_results_path))
+        save_path = os.path.join(
+            str(save_directory),
+            filename).replace(
+            '\\',
+            '/')
 
         with open(save_path, 'w', encoding='utf-8') as f:
             f.write(final_results.model_dump_json(indent=4))
@@ -277,24 +275,29 @@ class RAG:
     def evaluate(
             self,
             student_answer_path: str,
-            dataset_path: str,
-            k: int = 10) -> None:
-        """Evaluate recall@k for a saved answer file.
+            dataset_path: str) -> None:
+        """Evaluate recall@k for a saved answer file with the k-value
+        in the file.
 
         Args:
             student_answer_path: Path to the predicted answers JSON file.
             dataset_path: Path to the ground-truth dataset JSON file.
-            k: Retrieval depth used during evaluation.
         """
         print(f"Evaluating search results for {student_answer_path}...")
 
         with open(student_answer_path, 'r', encoding='utf-8') as f:
-            predictions = StudentSearchResults.model_validate_json(f.read())
+            try:
+                predictions = StudentSearchResults.model_validate_json(
+                    f.read())
+            except Exception:
+                err = "Invalid student_answer_path file "
+                err += "(pydantic validation error)"
+                raise Exception("err")
 
         recall_score = self._calculate_recall_at_k(predictions, dataset_path)
 
         print("=" * 40)
-        print(f"FINAL RECALL@{k} : {recall_score * 100:.2f}%")
+        print(f"FINAL RECALL@{predictions.k} : {recall_score * 100:.2f}%")
         print("=" * 40)
 
 
