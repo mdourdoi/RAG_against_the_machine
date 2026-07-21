@@ -103,7 +103,7 @@ class RAG:
         return (total_score / num_questions) if num_questions > 0 else 0.0
 
     def index(self, max_chunk_size: int = 2000,
-              source: str = "data/raw/vllm-0.10.1.zip") -> None:
+              source: str = "data/raw/vllm-0.10.1") -> None:
         """Build the BM25 index from the source.
 
         Args:
@@ -224,7 +224,7 @@ class RAG:
             k=k
         )
 
-        print(result.model_dump_json(indent=4))
+        print(result)
 
     def answer_dataset(
             self,
@@ -274,7 +274,7 @@ class RAG:
 
     def evaluate(
             self,
-            student_answer_path: str,
+            student_search_results_path: str,
             dataset_path: str) -> None:
         """Evaluate recall@k for a saved answer file with the k-value
         in the file.
@@ -283,16 +283,16 @@ class RAG:
             student_answer_path: Path to the predicted answers JSON file.
             dataset_path: Path to the ground-truth dataset JSON file.
         """
-        print(f"Evaluating search results for {student_answer_path}...")
+        print(f"Evaluating results for {student_search_results_path}...")
 
-        with open(student_answer_path, 'r', encoding='utf-8') as f:
+        with open(student_search_results_path, 'r', encoding='utf-8') as f:
             try:
                 predictions = StudentSearchResults.model_validate_json(
                     f.read())
             except Exception:
                 err = "Invalid student_answer_path file "
                 err += "(pydantic validation error)"
-                raise Exception("err")
+                raise Exception(err)
 
         recall_score = self._calculate_recall_at_k(predictions, dataset_path)
 

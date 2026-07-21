@@ -66,8 +66,8 @@ class FilesGetter:
                                 content = z.read(
                                     file_info.filename).decode('utf-8')
                                 content = content.replace('\r\n', '\n')
-                                files_data.append(
-                                    (file_info.filename, content))
+                                res = str(path_obj.parent / file_info.filename)
+                                files_data.append((res, content))
                             except UnicodeDecodeError:
                                 pass
                             except Exception as err:
